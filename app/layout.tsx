@@ -1,10 +1,13 @@
 "use client";
 
-import "../styles/globals.css";
-import Navbar from "../components/Navbar";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { Inter } from 'next/font/google'
+import Navbar from '@/components/Navbar'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import '@/styles/globals.css'
 import { useEffect, useState } from "react";
+
+const inter = Inter({ subsets: ['latin'] })
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   // Check local storage for dark mode preference
@@ -19,10 +22,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en">
-      <body className="bg-white dark:bg-gray-900 text-black dark:text-white">
+      <body className={inter.className}>
         <Navbar setDarkMode={setDarkMode} darkMode={darkMode} />
-        <main>{children}</main>
         <ToastContainer />
+        <main className="pt-16">
+          {children}
+        </main>
       </body>
     </html>
   );

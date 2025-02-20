@@ -1,36 +1,45 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ChatRoom from "../../components/ChatRoom";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import { Mic, Send } from "lucide-react";
 
 export default function ChatPage() {
   const [message, setMessage] = useState("");
-  const [chatBotResponse, setChatBotResponse] = useState("");
+  const [chatMessages, setChatMessages] = useState<{ sender: string; text: string }[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
 
   // Dummy function to simulate OpenAI chatbot response
   const sendToChatBot = async (msg: string) => {
-    return `Echo: ${msg}`;
+    setIsTyping(true);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(`Echo: ${msg}`);
+        setIsTyping(false);
+      }, 1500);
+    });
   };
 
   const handleChatSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!message.trim()) return;
+
+    setChatMessages((prev) => [...prev, { sender: "User", text: message }]);
+
     try {
       const response = await sendToChatBot(message);
-      setChatBotResponse(response);
-      toast.success("Message sent to chatbot!");
+      setChatMessages((prev) => [...prev, { sender: "Chatbot", text: response as string }]);
+      toast.success("Message sent!");
       setMessage("");
     } catch (error) {
-      toast.error("Failed to get response from chatbot.");
+      toast.error("Failed to get response.");
     }
   };
 
-  // Voice command using Web Speech API
   const handleVoiceCommand = () => {
     if (!("webkitSpeechRecognition" in window)) {
-      alert("Voice recognition not supported in this browser.");
+      alert("Voice recognition not supported.");
       return;
     }
     const recognition = new (window as any).webkitSpeechRecognition();
@@ -45,7 +54,7 @@ export default function ChatPage() {
 
   return (
     <motion.div
-      className="p-6 space-y-6 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 min-h-screen"
+      className="p-6 space-y-6 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 min-h-screen flex flex-col items-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
@@ -59,17 +68,49 @@ export default function ChatPage() {
         Live Chat 💬
       </motion.h2>
 
+      {/* Chat Container */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-lg bg-white/30 dark:bg-gray-900/50 backdrop-blur-lg shadow-lg rounded-2xl p-6 flex flex-col h-[500px] overflow-y-auto"
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.4, duration: 0.5 }}
       >
-        <ChatRoom />
+        {/* Chat Messages */}
+        <div className="flex flex-col space-y-3">
+          {chatMessages.map((msg, index) => (
+            <motion.div
+              key={index}
+              className={`p-3 rounded-lg w-fit max-w-xs ${
+                msg.sender === "User"
+                  ? "bg-blue-500 text-white self-end"
+                  : "bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white self-start"
+              }`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              {msg.text}
+            </motion.div>
+          ))}
+
+          {/* Typing Indicator */}
+          {isTyping && (
+            <motion.div
+              className="bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 rounded-lg self-start"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ repeat: Infinity, repeatType: "reverse", duration: 0.5 }}
+            >
+              Chatbot is typing...
+            </motion.div>
+          )}
+        </div>
       </motion.div>
 
+      {/* Chat Input */}
       <motion.div
-        className="mt-6 bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-lg max-w-lg mx-auto"
-        initial={{ scale: 0.9, opacity: 0 }}
+        className="w-full max-w-lg bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-md"
+        initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.6, duration: 0.5 }}
       >
@@ -78,7 +119,7 @@ export default function ChatPage() {
             placeholder="Type a message..."
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            className="border p-3 rounded-lg h-24 resize-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-700"
+            className="border p-3 rounded-lg h-20 resize-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-700"
             whileFocus={{ scale: 1.02 }}
           />
 
@@ -101,17 +142,6 @@ export default function ChatPage() {
             </motion.button>
           </div>
         </form>
-
-        {chatBotResponse && (
-          <motion.p
-            className="mt-4 p-4 border rounded-xl bg-gray-50 dark:bg-gray-700 dark:text-white"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <strong>Chatbot:</strong> {chatBotResponse}
-          </motion.p>
-        )}
       </motion.div>
     </motion.div>
   );

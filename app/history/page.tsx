@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 
 export default function RideHistory() {
   const [rides, setRides] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchHistory() {
@@ -15,26 +16,47 @@ export default function RideHistory() {
         setRides(response.data.rides || []);
       } catch (error) {
         console.error("Error fetching ride history", error);
+      } finally {
+        setLoading(false);
       }
     }
     fetchHistory();
   }, []);
 
   return (
-    <div className="p-6 min-h-screen bg-gradient-to-r from-blue-50 to-blue-100 dark:from-gray-800 dark:to-gray-900">
-      <h2 className="text-3xl font-bold text-center text-blue-700 dark:text-white mb-6">
-        Ride History
-      </h2>
-      
-      {rides.length > 0 ? (
-        <motion.div 
+    <motion.div
+      className="p-6 min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <motion.h2
+        className="text-4xl font-extrabold text-center text-blue-700 dark:text-blue-300 mb-6"
+        initial={{ y: -10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.4 }}
+      >
+        Ride History 🚖
+      </motion.h2>
+
+      {loading ? (
+        <motion.p
+          className="text-center text-lg text-gray-600 dark:text-gray-300"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          Loading your ride history...
+        </motion.p>
+      ) : rides.length > 0 ? (
+        <motion.div
           className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           {rides.map((ride, index) => (
-            <motion.div 
+            <motion.div
               key={index}
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.3 }}
@@ -44,10 +66,21 @@ export default function RideHistory() {
           ))}
         </motion.div>
       ) : (
-        <p className="text-center text-gray-600 dark:text-gray-300 text-lg">
-          No past rides available.
-        </p>
+        <motion.div
+          className="flex flex-col items-center justify-center text-center text-gray-600 dark:text-gray-300 text-lg mt-10"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/3081/3081648.png"
+            alt="No rides available"
+            className="w-40 h-40 opacity-75"
+          />
+          <p className="mt-4 text-xl font-semibold">No past rides available.</p>
+          <p className="text-gray-500 text-sm">Your ride history will appear here.</p>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }
