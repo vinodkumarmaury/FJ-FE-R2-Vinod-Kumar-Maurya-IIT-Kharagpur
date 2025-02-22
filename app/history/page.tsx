@@ -26,7 +26,7 @@ export default function RideHistory() {
   useEffect(() => {
     async function fetchHistory() {
       try {
-        const response = await getRideHistory();
+        const response: unknown = await getRideHistory();
 
         // Type guard function to check if response matches expected structure
         const isValidResponse = (res: any): res is RideHistoryResponse => {
