@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import DarkModeToggle from "./DarkModeToggle";
 import { motion } from "framer-motion";
@@ -12,6 +12,12 @@ export default function Navbar() {
     const savedDarkMode = localStorage.getItem("darkMode") === "true";
     setDarkMode(savedDarkMode);
     document.documentElement.classList.toggle("dark", savedDarkMode);
+  }, []);
+
+  const toggleDarkMode = useCallback((mode: boolean) => {
+    setDarkMode(mode);
+    localStorage.setItem("darkMode", mode.toString());
+    document.documentElement.classList.toggle("dark", mode);
   }, []);
 
   return (
@@ -72,7 +78,7 @@ export default function Navbar() {
               Register
             </motion.span>
           </Link>
-          <DarkModeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
+          <DarkModeToggle darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
         </div>
       </div>
     </motion.nav>
