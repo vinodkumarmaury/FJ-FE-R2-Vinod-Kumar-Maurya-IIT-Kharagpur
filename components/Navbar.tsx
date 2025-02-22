@@ -5,20 +5,23 @@ import Link from "next/link";
 import DarkModeToggle from "./DarkModeToggle";
 import { motion } from "framer-motion";
 
-export default function Navbar() {
-  const [darkMode, setDarkMode] = useState(false);
+interface NavbarProps {
+  darkMode: boolean;
+  setDarkMode: React.Dispatch<React.SetStateAction<boolean>>;
+}
 
+export default function Navbar({ darkMode, setDarkMode }: NavbarProps) {
   useEffect(() => {
     const savedDarkMode = localStorage.getItem("darkMode") === "true";
     setDarkMode(savedDarkMode);
     document.documentElement.classList.toggle("dark", savedDarkMode);
-  }, []);
+  }, [setDarkMode]);
 
   const toggleDarkMode = useCallback((mode: boolean) => {
     setDarkMode(mode);
     localStorage.setItem("darkMode", mode.toString());
     document.documentElement.classList.toggle("dark", mode);
-  }, []);
+  }, [setDarkMode]);
 
   return (
     <motion.nav
