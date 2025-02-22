@@ -6,6 +6,9 @@ import { login } from "@/utils/api";
 import { toast } from "react-toastify";
 import { FaUser, FaLock } from "react-icons/fa";
 
+const UserIcon: React.FC = () => <FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />;
+const LockIcon: React.FC = () => <FaLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />;
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,7 +33,7 @@ export default function LoginPage() {
         
         <form onSubmit={handleLogin} className="space-y-5">
           <div className="relative">
-            {<FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />}
+            <UserIcon />
             <input
               type="email"
               placeholder="Email"
@@ -42,7 +45,7 @@ export default function LoginPage() {
           </div>
 
           <div className="relative">
-            <FaLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <LockIcon />
             <input
               type="password"
               placeholder="Password"

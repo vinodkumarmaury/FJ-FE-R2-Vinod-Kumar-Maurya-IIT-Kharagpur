@@ -6,6 +6,10 @@ import { register } from "@/utils/api";
 import { toast } from "react-toastify";
 import { FaUser, FaEnvelope, FaLock } from "react-icons/fa";
 
+const UserIcon: React.FC = () => <FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />;
+const EmailIcon: React.FC = () => <FaEnvelope className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />;
+const LockIcon: React.FC = () => <FaLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />;
+
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -31,7 +35,7 @@ export default function RegisterPage() {
 
         <form onSubmit={handleRegister} className="space-y-5">
           <div className="relative">
-            {<FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />}
+            <UserIcon />
             <input
               type="text"
               placeholder="Full Name"
@@ -43,7 +47,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="relative">
-            <FaEnvelope className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <EmailIcon />
             <input
               type="email"
               placeholder="Email Address"
@@ -55,7 +59,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="relative">
-            <FaLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <LockIcon />
             <input
               type="password"
               placeholder="Password"
