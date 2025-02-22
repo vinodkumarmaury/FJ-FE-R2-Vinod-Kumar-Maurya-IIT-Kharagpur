@@ -31,7 +31,7 @@ export default function RegisterPage() {
 
         <form onSubmit={handleRegister} className="space-y-5">
           <div className="relative">
-            <FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            {<FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />}
             <input
               type="text"
               placeholder="Full Name"
