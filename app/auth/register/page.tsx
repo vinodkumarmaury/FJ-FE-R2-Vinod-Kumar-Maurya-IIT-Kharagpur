@@ -4,9 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { register } from "@/utils/api";
 import { toast } from "react-toastify";
-import { FaUser, FaEnvelope, FaLock } from "react-icons/fa6";
+import { FaEnvelope, FaLock } from "react-icons/fa6";
 
-const UserIcon: React.FC = () => <FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />;
 const EmailIcon: React.FC = () => <FaEnvelope className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />;
 const LockIcon: React.FC = () => <FaLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />;
 
@@ -35,13 +34,12 @@ export default function RegisterPage() {
 
         <form onSubmit={handleRegister} className="space-y-5">
           <div className="relative">
-            <UserIcon />
             <input
               type="text"
               placeholder="Full Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-gray-400"
+              className="w-full pl-4 pr-4 py-3 rounded-lg bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-gray-400"
               required
             />
           </div>
