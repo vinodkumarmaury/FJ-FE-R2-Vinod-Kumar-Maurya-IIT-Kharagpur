@@ -4,15 +4,38 @@ import { useEffect, useState } from "react";
 import { getLoyaltyInfo } from "../../utils/api";
 import { motion } from "framer-motion";
 
+interface LoyaltyInfo {
+  points: number;
+  discount: number;
+}
+
 export default function LoyaltyPage() {
-  const [loyalty, setLoyalty] = useState<{ points: number; discount: number } | null>(null);
+  const [loyalty, setLoyalty] = useState<LoyaltyInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchLoyalty() {
       try {
-        const response = await getLoyaltyInfo();
-        setLoyalty(response.data);
+        const response: unknown = await getLoyaltyInfo();
+
+        // Type guard function to check if response matches expected structure
+        const isValidResponse = (res: any): res is { data: LoyaltyInfo } => {
+          return (
+            res &&
+            typeof res === "object" &&
+            "data" in res &&
+            res.data &&
+            typeof res.data === "object" &&
+            "points" in res.data &&
+            "discount" in res.data
+          );
+        };
+
+        if (isValidResponse(response)) {
+          setLoyalty(response.data);
+        } else {
+          setLoyalty(null);
+        }
       } catch (error) {
         console.error("Error fetching loyalty info", error);
       } finally {
