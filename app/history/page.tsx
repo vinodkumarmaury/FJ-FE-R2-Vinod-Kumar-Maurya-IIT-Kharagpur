@@ -5,21 +5,44 @@ import { getRideHistory } from "../../utils/api";
 import RideCard from "../../components/RideCard";
 import { motion } from "framer-motion";
 
+// Define the expected Ride type
+interface Ride {
+  id: string;
+  date: string;
+  distance: number;
+  fare: number;
+}
+
 export default function RideHistory() {
-  const [rides, setRides] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [rides, setRides] = useState<Ride[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     async function fetchHistory() {
       try {
         const response = await getRideHistory();
-        setRides(response.data.rides || []);
+
+        // Explicitly define the type of response
+        if (
+          response &&
+          typeof response === "object" &&
+          "data" in response &&
+          response.data &&
+          "rides" in response.data &&
+          Array.isArray(response.data.rides)
+        ) {
+          setRides(response.data.rides);
+        } else {
+          setRides([]);
+        }
       } catch (error) {
         console.error("Error fetching ride history", error);
+        setRides([]); // Ensure a default value is set
       } finally {
         setLoading(false);
       }
     }
+
     fetchHistory();
   }, []);
 
