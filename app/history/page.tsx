@@ -13,6 +13,12 @@ interface Ride {
   fare: number;
 }
 
+interface RideHistoryResponse {
+  data: {
+    rides: Ride[];
+  };
+}
+
 export default function RideHistory() {
   const [rides, setRides] = useState<Ride[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -22,15 +28,20 @@ export default function RideHistory() {
       try {
         const response = await getRideHistory();
 
-        // Explicitly define the type of response
-        if (
-          response &&
-          typeof response === "object" &&
-          "data" in response &&
-          response.data &&
-          "rides" in response.data &&
-          Array.isArray(response.data.rides)
-        ) {
+        // Type guard function to check if response matches expected structure
+        const isValidResponse = (res: any): res is RideHistoryResponse => {
+          return (
+            res &&
+            typeof res === "object" &&
+            "data" in res &&
+            res.data &&
+            typeof res.data === "object" &&
+            "rides" in res.data &&
+            Array.isArray(res.data.rides)
+          );
+        };
+
+        if (isValidResponse(response)) {
           setRides(response.data.rides);
         } else {
           setRides([]);
