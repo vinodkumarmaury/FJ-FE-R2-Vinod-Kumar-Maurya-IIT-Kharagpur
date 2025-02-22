@@ -5,6 +5,11 @@ import { motion } from "framer-motion";
 import MapComponent from "../../components/MapComponent";
 import FeedbackForm from "../../components/FeedbackForm";
 
+interface Location {
+  pickup: string;
+  destination: string;
+}
+
 export default function BookingPage() {
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
@@ -12,7 +17,7 @@ export default function BookingPage() {
   const [fare, setFare] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
 
-  const calculateFare = (pickup, destination) => {
+  const calculateFare = (pickup: string, destination: string): number => {
     return Math.floor(Math.random() * 50) + 10; // Dummy fare calculation logic
   };
 
