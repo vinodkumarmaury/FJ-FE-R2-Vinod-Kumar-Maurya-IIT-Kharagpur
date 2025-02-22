@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchProfile } from "../../utils/api";
+import { fetchProfile } from "@/utils/api";
 import { motion } from "framer-motion";
 
 interface Profile {
@@ -16,8 +16,15 @@ export default function ProfilePage() {
   useEffect(() => {
     async function getProfile() {
       try {
-        const response = await fetchProfile();
-        setProfile(response.data);
+        // fetchProfile returns the JSON response directly
+        const data = await fetchProfile();
+        // Map dummyJSON data to your Profile interface:
+        const formattedProfile: Profile = {
+          name: `${data.firstName} ${data.lastName}`,
+          email: data.email,
+          totalRides: 0, // Default value since dummyJSON doesn't provide ride count
+        };
+        setProfile(formattedProfile);
       } catch (error) {
         console.error("Error fetching profile", error);
       }

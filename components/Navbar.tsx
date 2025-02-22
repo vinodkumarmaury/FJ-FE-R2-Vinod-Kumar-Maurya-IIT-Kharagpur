@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import DarkModeToggle from "./DarkModeToggle";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { Menu, X } from "lucide-react";
 
 interface NavbarProps {
   darkMode: boolean;
@@ -11,6 +12,8 @@ interface NavbarProps {
 }
 
 export default function Navbar({ darkMode, setDarkMode }: NavbarProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   useEffect(() => {
     const savedDarkMode = localStorage.getItem("darkMode") === "true";
     setDarkMode(savedDarkMode);
@@ -23,6 +26,16 @@ export default function Navbar({ darkMode, setDarkMode }: NavbarProps) {
     document.documentElement.classList.toggle("dark", mode);
   }, [setDarkMode]);
 
+  const navLinks = [
+    { name: "Book Ride", path: "/booking" },
+    { name: "Ride History", path: "/history" },
+    { name: "Payments", path: "/payment" },
+    { name: "Profile", path: "/profile" },
+    { name: "Chat", path: "/chat" },
+    { name: "Tracking", path: "/tracking" },
+    { name: "Loyalty", path: "/loyalty" },
+  ];
+
   return (
     <motion.nav
       className="fixed top-0 left-0 w-full z-50 bg-gray-900 shadow-md backdrop-blur-lg transition-all duration-500"
@@ -31,7 +44,6 @@ export default function Navbar({ darkMode, setDarkMode }: NavbarProps) {
       transition={{ duration: 0.5 }}
     >
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-        {/* Left Side - Logo & Links */}
         <div className="flex items-center space-x-6">
           <Link href="/">
             <motion.span
@@ -41,30 +53,20 @@ export default function Navbar({ darkMode, setDarkMode }: NavbarProps) {
               Ride Sharing
             </motion.span>
           </Link>
-          <div className="hidden md:flex space-x-6">
-            {[
-              { name: "Book Ride", path: "/booking" },
-              { name: "Ride History", path: "/history" },
-              { name: "Payments", path: "/payment" },
-              { name: "Profile", path: "/profile" },
-              { name: "Chat", path: "/chat" },
-              { name: "Tracking", path: "/tracking" },
-              { name: "Loyalty", path: "/loyalty" },
-            ].map((link) => (
-              <Link key={link.path} href={link.path}>
-                <motion.span
-                  className="text-gray-300 hover:text-yellow-400 transition duration-300 ease-in-out transform hover:scale-110"
-                  whileHover={{ scale: 1.1 }}
-                >
-                  {link.name}
-                </motion.span>
-              </Link>
-            ))}
-          </div>
         </div>
-
-        {/* Right Side - Auth & Dark Mode */}
-        <div className="flex items-center space-x-4">
+        <div className="hidden md:flex space-x-6">
+          {navLinks.map((link) => (
+            <Link key={link.path} href={link.path}>
+              <motion.span
+                className="text-gray-300 hover:text-yellow-400 transition duration-300 ease-in-out transform hover:scale-110"
+                whileHover={{ scale: 1.1 }}
+              >
+                {link.name}
+              </motion.span>
+            </Link>
+          ))}
+        </div>
+        <div className="hidden md:flex items-center space-x-4">
           <Link href="/auth/login">
             <motion.span
               className="px-4 py-2 rounded-lg text-sm font-medium text-black bg-yellow-400 hover:bg-yellow-500 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
@@ -83,7 +85,51 @@ export default function Navbar({ darkMode, setDarkMode }: NavbarProps) {
           </Link>
           <DarkModeToggle darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
         </div>
+        <div className="md:hidden flex items-center">
+          <button onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <X className="text-white" size={30} /> : <Menu className="text-white" size={30} />}
+          </button>
+        </div>
       </div>
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            className="md:hidden absolute top-16 left-0 w-full bg-gray-900 shadow-lg flex flex-col items-center py-4 space-y-4"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+          >
+            {navLinks.map((link) => (
+              <Link key={link.path} href={link.path} onClick={() => setMenuOpen(false)}>
+                <motion.span
+                  className="text-gray-300 hover:text-yellow-400 transition duration-300 ease-in-out transform hover:scale-110"
+                  whileHover={{ scale: 1.1 }}
+                >
+                  {link.name}
+                </motion.span>
+              </Link>
+            ))}
+            <div className="flex flex-col items-center space-y-2">
+              <Link href="/auth/login" onClick={() => setMenuOpen(false)}>
+                <motion.span
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-black bg-yellow-400 hover:bg-yellow-500 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                  whileHover={{ scale: 1.1 }}
+                >
+                  Login
+                </motion.span>
+              </Link>
+              <Link href="/auth/register" onClick={() => setMenuOpen(false)}>
+                <motion.span
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-yellow-400 border border-yellow-400 hover:bg-yellow-400 hover:text-black transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                  whileHover={{ scale: 1.1 }}
+                >
+                  Register
+                </motion.span>
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.nav>
   );
 }
