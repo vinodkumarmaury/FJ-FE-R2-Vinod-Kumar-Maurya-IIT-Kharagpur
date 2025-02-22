@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { register } from "@/utils/api";
 import { toast } from "react-toastify";
-import { FaUser, FaEnvelope, FaLock } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaLock } from "react-icons/fa6";
 
 const UserIcon: React.FC = () => <FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />;
 const EmailIcon: React.FC = () => <FaEnvelope className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />;
