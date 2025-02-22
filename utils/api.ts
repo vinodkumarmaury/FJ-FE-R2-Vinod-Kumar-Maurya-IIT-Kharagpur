@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE = "https://dummyjson.com"; // Replace with your actual API endpoints if available
+const API_BASE = "https://dummyjson.com"; // Replace with your actual API endpoint if available
 
 export const login = async (email: string, password: string) => {
   return await axios.post(`${API_BASE}/auth/login`, { email, password });
@@ -20,8 +20,9 @@ export const register = async ({
 
 export const fetchProfile = async () => {
   const token = localStorage.getItem("token");
-  // Simulate profile fetch – include token in headers if needed
-  return await axios.get(`${API_BASE}/users/1`, { headers: { Authorization: token } });
+  return await axios.get(`${API_BASE}/users/1`, {
+    headers: token ? { Authorization: token } : {}, // Only include the header if a token exists
+  });
 };
 
 export const getRideHistory = async () => {
