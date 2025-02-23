@@ -3,8 +3,19 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import dynamic from 'next/dynamic';
-import MapComponent from "../../components/MapComponent";
 import FeedbackForm from "../../components/FeedbackForm";
+
+const MapComponent = dynamic(
+  () => import("../../components/MapComponent"),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-[400px] bg-gray-800 rounded-lg flex items-center justify-center">
+        <p className="text-gray-400">Loading map...</p>
+      </div>
+    )
+  }
+);
 
 interface Location {
   lat: number;

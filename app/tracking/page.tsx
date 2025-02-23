@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import dynamic from 'next/dynamic';
 
-// Dynamically import MapComponent (for SSR support)
 const MapComponent = dynamic(() => import("../../components/MapComponent"), { ssr: false });
 
 export default function TrackingPage() {
-  const [currentLocation, setCurrentLocation] = useState({ lat: 37.7749, lng: -122.4194 });
+  const [currentLocation, setCurrentLocation] = useState({ lat: 51.5074, lng: -0.1278 });
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -20,7 +19,6 @@ export default function TrackingPage() {
       });
     }
 
-    // Update location every 5 seconds
     const interval = setInterval(() => {
       setCurrentLocation((prev) => ({
         lat: prev.lat + (Math.random() - 0.5) * 0.005,
