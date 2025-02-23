@@ -13,6 +13,7 @@ const CheckoutForm = () => {
   const stripe = useStripe();
   const elements = useElements();
   const [nameOnCard, setNameOnCard] = useState("");
+  const [amount, setAmount] = useState(1000); // Default amount in cents ($10.00)
   const [processing, setProcessing] = useState(false);
 
   const handlePayment = async (e: React.FormEvent) => {
@@ -48,7 +49,7 @@ const CheckoutForm = () => {
     const response = await fetch("/api/auth/payment/create-payment-intent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: 1000 }), // Example: $10.00 in cents
+      body: JSON.stringify({ amount }), // Use the amount entered by the user
     });
 
     if (!response.ok) {
@@ -76,6 +77,10 @@ const CheckoutForm = () => {
       toast.error("Payment confirmation failed. Please try again.");
     } else {
       toast.success("Payment processed successfully!");
+      // Clear form data
+      setNameOnCard("");
+      setAmount(1000); // Reset to default amount
+      elements.getElement(CardElement)?.clear();
     }
   };
 
@@ -86,7 +91,16 @@ const CheckoutForm = () => {
         placeholder="Name on Card"
         value={nameOnCard}
         onChange={(e) => setNameOnCard(e.target.value)}
-        className="bg-gray-700 text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="bg-gray-700 text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-white"
+        whileFocus={{ scale: 1.02 }}
+        required
+      />
+      <motion.input
+        type="number"
+        placeholder="Amount in cents"
+        value={amount}
+        onChange={(e) => setAmount(Number(e.target.value))}
+        className="bg-gray-700 text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-white"
         whileFocus={{ scale: 1.02 }}
         required
       />

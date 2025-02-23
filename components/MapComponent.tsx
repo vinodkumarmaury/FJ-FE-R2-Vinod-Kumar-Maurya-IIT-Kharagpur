@@ -33,7 +33,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentLocation, pickup, de
       const fetchRoute = async () => {
         try {
           const response = await fetch(
-            `https://api.openrouteservice.org/v2/directions/driving-car?api_key=https://api.openrouteservice.org/v2/directions/driving-car?api_key=your-api-key&start=8.681495,49.41461&end=8.687872,49.420318&start=${encodeURIComponent(pickup.lat)},${encodeURIComponent(pickup.lng)}&end=${encodeURIComponent(destination.lat)},${encodeURIComponent(destination.lng)}`
+            `https://api.openrouteservice.org/v2/directions/driving-car?api_key=your-api-key&start=${encodeURIComponent(pickup.lng)},${encodeURIComponent(pickup.lat)}&end=${encodeURIComponent(destination.lng)},${encodeURIComponent(destination.lat)}`
           );
           const data = await response.json();
           if (data && data.features && data.features.length > 0) {
@@ -75,12 +75,24 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentLocation, pickup, de
         </div>
       )}
       <div>
-        <p>Current Latitude: {currentLocation.lat}</p>
-        <p>Current Longitude: {currentLocation.lng}</p>
-        <p>Pickup Latitude: {pickup.lat}</p>
-        <p>Pickup Longitude: {pickup.lng}</p>
-        <p>Destination Latitude: {destination.lat}</p>
-        <p>Destination Longitude: {destination.lng}</p>
+        {currentLocation && (
+          <>
+            <p>Current Latitude: {currentLocation.lat}</p>
+            <p>Current Longitude: {currentLocation.lng}</p>
+          </>
+        )}
+        {pickup && (
+          <>
+            <p>Pickup Latitude: {pickup.lat}</p>
+            <p>Pickup Longitude: {pickup.lng}</p>
+          </>
+        )}
+        {destination && (
+          <>
+            <p>Destination Latitude: {destination.lat}</p>
+            <p>Destination Longitude: {destination.lng}</p>
+          </>
+        )}
       </div>
     </div>
   );
