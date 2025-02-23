@@ -5,10 +5,6 @@ import "leaflet/dist/leaflet.css";
 import './MapComponent.css';
 
 interface MapComponentProps {
-  currentLocation: {
-    lat: number;
-    lng: number;
-  };
   pickup: {
     lat: number;
     lng: number;
@@ -24,7 +20,7 @@ interface RouteInfo {
   duration: string;
 }
 
-const MapComponent: React.FC<MapComponentProps> = ({ currentLocation, pickup, destination }) => {
+const MapComponent: React.FC<MapComponentProps> = ({ pickup, destination }) => {
   const [route, setRoute] = useState<L.LatLng[]>([]);
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
 
@@ -75,12 +71,6 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentLocation, pickup, de
         </div>
       )}
       <div>
-        {currentLocation && (
-          <>
-            <p>Current Latitude: {currentLocation.lat}</p>
-            <p>Current Longitude: {currentLocation.lng}</p>
-          </>
-        )}
         {pickup && (
           <>
             <p>Pickup Latitude: {pickup.lat}</p>

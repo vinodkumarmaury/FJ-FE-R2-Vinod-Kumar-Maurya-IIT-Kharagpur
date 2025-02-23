@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import dynamic from 'next/dynamic';
 import MapComponent from "../../components/MapComponent";
 import FeedbackForm from "../../components/FeedbackForm";
 
 interface Location {
-  pickup: string;
-  destination: string;
+  lat: number;
+  lng: number;
 }
 
 export default function BookingPage() {
@@ -27,6 +28,15 @@ export default function BookingPage() {
     alert(`Ride booked from ${pickup} to ${destination}. Estimated fare: $${estimatedFare}`);
     setShowFeedback(true);
   };
+
+  const convertToLatLng = (location: string): Location => {
+    // Dummy conversion logic; replace with actual geocoding logic
+    const [lat, lng] = location.split(",").map(Number);
+    return { lat, lng };
+  };
+
+  const pickupLocation = convertToLatLng(pickup);
+  const destinationLocation = convertToLatLng(destination);
 
   return (
     <motion.div
@@ -58,7 +68,7 @@ export default function BookingPage() {
           <input
             id="pickup"
             type="text"
-            placeholder="Enter pickup location"
+            placeholder="Enter pickup location (lat,lng)"
             value={pickup}
             onChange={(e) => setPickup(e.target.value)}
             className="w-full p-3 mt-1 rounded-lg shadow-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring focus:ring-blue-400 transition"
@@ -70,7 +80,7 @@ export default function BookingPage() {
           <input
             id="destination"
             type="text"
-            placeholder="Enter destination"
+            placeholder="Enter destination (lat,lng)"
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
             className="w-full p-3 mt-1 rounded-lg shadow-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring focus:ring-blue-400 transition"
@@ -118,7 +128,7 @@ export default function BookingPage() {
           transition={{ duration: 0.6 }}
         >
           <h3 className="text-2xl font-semibold mb-4 text-center text-blue-300">Ride Route</h3>
-          <MapComponent pickup={pickup} destination={destination} />
+          <MapComponent pickup={pickupLocation} destination={destinationLocation} />
         </motion.div>
       </div>
 
