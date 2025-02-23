@@ -1,5 +1,28 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
+import dynamic from 'next/dynamic';
+
+const MapContainer = dynamic(
+  () => import('react-leaflet').then((mod) => mod.MapContainer),
+  { ssr: false }
+);
+
+const TileLayer = dynamic(
+  () => import('react-leaflet').then((mod) => mod.TileLayer),
+  { ssr: false }
+);
+
+const Marker = dynamic(
+  () => import('react-leaflet').then((mod) => mod.Marker),
+  { ssr: false }
+);
+
+const Polyline = dynamic(
+  () => import('react-leaflet').then((mod) => mod.Polyline),
+  { ssr: false }
+);
+
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import './MapComponent.css';
@@ -25,10 +48,15 @@ interface RouteInfo {
 }
 
 const MapComponent: React.FC<MapComponentProps> = ({ currentLocation, pickup, destination }) => {
+  const [isClient, setIsClient] = useState(false);
   const [route, setRoute] = useState<L.LatLng[]>([]);
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [pickupInput, setPickupInput] = useState<string>("");
   const [destinationInput, setDestinationInput] = useState<string>("");
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     if (pickup && destination) {
@@ -57,6 +85,14 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentLocation, pickup, de
   }, [pickup, destination]);
 
   const center = currentLocation || pickup || { lat: 0, lng: 0 };
+
+  if (!isClient) {
+    return (
+      <div className="w-full h-[400px] bg-gray-800 rounded-lg flex items-center justify-center">
+        <p className="text-gray-400">Loading map...</p>
+      </div>
+    );
+  }
 
   return (
     <div>
