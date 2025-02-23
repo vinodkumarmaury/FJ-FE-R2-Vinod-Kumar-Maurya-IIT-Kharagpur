@@ -23,6 +23,8 @@ interface RouteInfo {
 const MapComponent: React.FC<MapComponentProps> = ({ pickup, destination }) => {
   const [route, setRoute] = useState<L.LatLng[]>([]);
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
+  const [pickupInput, setPickupInput] = useState<string>("");
+  const [destinationInput, setDestinationInput] = useState<string>("");
 
   useEffect(() => {
     if (pickup && destination) {
@@ -54,6 +56,24 @@ const MapComponent: React.FC<MapComponentProps> = ({ pickup, destination }) => {
 
   return (
     <div>
+      <input
+        id="pickup"
+        type="text"
+        placeholder="Enter pickup location (e.g., 51.5074,-0.1278)"
+        value={pickupInput}
+        onChange={(e) => setPickupInput(e.target.value)}
+        className="w-full p-3 mt-1 rounded-lg shadow-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring focus:ring-blue-400 transition"
+      />
+
+      <input
+        id="destination"
+        type="text"
+        placeholder="Enter destination (e.g., 51.5074,-0.1278)"
+        value={destinationInput}
+        onChange={(e) => setDestinationInput(e.target.value)}
+        className="w-full p-3 mt-1 rounded-lg shadow-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring focus:ring-blue-400 transition"
+      />
+
       <MapContainer style={{ height: "400px", width: "100%" }} center={[0, 0]} zoom={10}>
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         {route.length > 0 && (

@@ -17,6 +17,8 @@ export default function BookingPage() {
   const [rideType, setRideType] = useState("economy");
   const [fare, setFare] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [pickupLocation, setPickupLocation] = useState<Location>({ lat: 0, lng: 0 });
+  const [destinationLocation, setDestinationLocation] = useState<Location>({ lat: 0, lng: 0 });
 
   const calculateFare = (pickup: string, destination: string): number => {
     return Math.floor(Math.random() * 50) + 10; // Dummy fare calculation logic
@@ -29,14 +31,22 @@ export default function BookingPage() {
     setShowFeedback(true);
   };
 
-  const convertToLatLng = (location: string): Location => {
-    // Dummy conversion logic; replace with actual geocoding logic
-    const [lat, lng] = location.split(",").map(Number);
-    return { lat, lng };
+  const convertToLatLng = (location: string): Location | null => {
+    if (!location) return null;
+    const coords = location.split(",").map(Number);
+    if (coords.length !== 2 || isNaN(coords[0]) || isNaN(coords[1])) return null;
+    return { lat: coords[0], lng: coords[1] };
   };
 
-  const pickupLocation = convertToLatLng(pickup);
-  const destinationLocation = convertToLatLng(destination);
+  useEffect(() => {
+    const converted = convertToLatLng(pickup);
+    if (converted) setPickupLocation(converted);
+  }, [pickup]);
+
+  useEffect(() => {
+    const converted = convertToLatLng(destination);
+    if (converted) setDestinationLocation(converted);
+  }, [destination]);
 
   return (
     <motion.div
@@ -128,7 +138,12 @@ export default function BookingPage() {
           transition={{ duration: 0.6 }}
         >
           <h3 className="text-2xl font-semibold mb-4 text-center text-blue-300">Ride Route</h3>
-          <MapComponent pickup={pickupLocation} destination={destinationLocation} />
+          {pickupLocation && destinationLocation && (
+            <MapComponent 
+              pickup={pickupLocation} 
+              destination={destinationLocation} 
+            />
+          )}
         </motion.div>
       </div>
 
