@@ -5,8 +5,18 @@ import "leaflet/dist/leaflet.css";
 import './MapComponent.css';
 
 interface MapComponentProps {
-  pickup: string;
-  destination: string;
+  currentLocation: {
+    lat: number;
+    lng: number;
+  };
+  pickup: {
+    lat: number;
+    lng: number;
+  };
+  destination: {
+    lat: number;
+    lng: number;
+  };
 }
 
 interface RouteInfo {
@@ -14,7 +24,7 @@ interface RouteInfo {
   duration: string;
 }
 
-const MapComponent: React.FC<MapComponentProps> = ({ pickup, destination }) => {
+const MapComponent: React.FC<MapComponentProps> = ({ currentLocation, pickup, destination }) => {
   const [route, setRoute] = useState<L.LatLng[]>([]);
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
 
@@ -23,7 +33,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ pickup, destination }) => {
       const fetchRoute = async () => {
         try {
           const response = await fetch(
-            `https://api.openrouteservice.org/v2/directions/driving-car?api_key=https://api.openrouteservice.org/v2/directions/driving-car?api_key=your-api-key&start=8.681495,49.41461&end=8.687872,49.420318&start=${encodeURIComponent(pickup)}&end=${encodeURIComponent(destination)}`
+            `https://api.openrouteservice.org/v2/directions/driving-car?api_key=https://api.openrouteservice.org/v2/directions/driving-car?api_key=your-api-key&start=8.681495,49.41461&end=8.687872,49.420318&start=${encodeURIComponent(pickup.lat)},${encodeURIComponent(pickup.lng)}&end=${encodeURIComponent(destination.lat)},${encodeURIComponent(destination.lng)}`
           );
           const data = await response.json();
           if (data && data.features && data.features.length > 0) {
@@ -64,6 +74,14 @@ const MapComponent: React.FC<MapComponentProps> = ({ pickup, destination }) => {
           <p>Duration: {routeInfo.duration}</p>
         </div>
       )}
+      <div>
+        <p>Current Latitude: {currentLocation.lat}</p>
+        <p>Current Longitude: {currentLocation.lng}</p>
+        <p>Pickup Latitude: {pickup.lat}</p>
+        <p>Pickup Longitude: {pickup.lng}</p>
+        <p>Destination Latitude: {destination.lat}</p>
+        <p>Destination Longitude: {destination.lng}</p>
+      </div>
     </div>
   );
 };
