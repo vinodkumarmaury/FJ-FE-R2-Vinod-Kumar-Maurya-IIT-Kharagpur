@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { register } from "@/utils/api";
 import { toast } from "react-toastify";
-import { FaUser, FaEnvelope, FaLock } from "react-icons/fa";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
