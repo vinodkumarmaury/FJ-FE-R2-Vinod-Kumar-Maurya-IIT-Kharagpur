@@ -38,10 +38,10 @@ export default function Navbar({ darkMode, setDarkMode }: NavbarProps) {
 
   return (
     <motion.nav
-      className="fixed top-0 left-0 w-full z-50 bg-gray-900 shadow-md backdrop-blur-lg transition-all duration-500"
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      className="fixed top-0 left-0 w-full z-[999] bg-gray-900 shadow-md backdrop-blur-lg bg-opacity-95 transition-all duration-500"
+      initial={{ y: 0 }} // Changed from -10 to 0
+      animate={{ y: 0 }}
+      transition={{ duration: 0.2 }} // Reduced from 0.3 to 0.2
     >
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         <div className="flex items-center space-x-6">

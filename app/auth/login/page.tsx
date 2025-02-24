@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/utils/api";
 import { toast } from "react-toastify";
-
+import Link from 'next/link';
 
 export default function LoginPage() {
   const [username, setUsername] = useState(""); // Use username here
@@ -63,9 +63,9 @@ export default function LoginPage() {
         </form>
         <p className="text-center text-gray-400 mt-4">
           Don't have an account?{" "}
-          <a href="/auth/register" className="text-blue-400 hover:underline">
+          <Link href="/auth/register" className="text-blue-400 hover:underline">
             Sign up
-          </a>
+          </Link>
         </p>
       </div>
     </div>

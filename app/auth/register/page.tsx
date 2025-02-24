@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation"; 
 import { register } from "@/utils/api";
 import { toast } from "react-toastify";
+import Link from 'next/link';
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -82,9 +83,9 @@ export default function RegisterPage() {
         </form>
         <p className="text-center text-gray-400 mt-4">
           Already have an account?{" "}
-          <a href="/auth/login" className="text-blue-400 hover:underline">
+          <Link href="/auth/login" className="text-blue-400 hover:underline">
             Sign in
-          </a>
+          </Link>
         </p>
       </div>
     </div>
