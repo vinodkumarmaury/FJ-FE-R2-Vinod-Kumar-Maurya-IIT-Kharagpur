@@ -1,5 +1,5 @@
 "use client";
-
+import { toast } from "react-toastify";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import dynamic from 'next/dynamic';
@@ -30,16 +30,47 @@ export default function BookingPage() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [pickupLocation, setPickupLocation] = useState<Location>({ lat: 0, lng: 0 });
   const [destinationLocation, setDestinationLocation] = useState<Location>({ lat: 0, lng: 0 });
+  const [isSharedRide, setIsSharedRide] = useState(false);
+  const [participants, setParticipants] = useState<string[]>([]);
+  const [estimatedFare, setEstimatedFare] = useState<number | null>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
 
   const calculateFare = (pickup: string, destination: string): number => {
     return Math.floor(Math.random() * 50) + 10; // Dummy fare calculation logic
   };
 
   const handleBooking = () => {
-    const estimatedFare = calculateFare(pickup, destination);
+    if (estimatedFare === null) {
+      toast.error("Please calculate the fare first");
+      return;
+    }
+    
     setFare(estimatedFare);
-    alert(`Ride booked from ${pickup} to ${destination}. Estimated fare: $${estimatedFare}`);
+    alert(`Ride booked from ${pickup} to ${destination}. 
+      ${isSharedRide ? 'Shared ride - ' : ''}Total fare: $${estimatedFare.toFixed(2)}`);
     setShowFeedback(true);
+  };
+
+  const handleCalculateFare = () => {
+    if (!pickup || !destination) {
+      toast.error("Please enter both pickup and destination locations");
+      return;
+    }
+    
+    setIsCalculating(true);
+    // Simulate API call for fare calculation
+    setTimeout(() => {
+      const baseFare = calculateFare(pickup, destination);
+      const typeFactor = rideType === 'premium' ? 1.5 : 1;
+      const calculatedFare = baseFare * typeFactor;
+      
+      if (isSharedRide && participants.length > 0) {
+        setEstimatedFare(calculatedFare / (participants.length + 1));
+      } else {
+        setEstimatedFare(calculatedFare);
+      }
+      setIsCalculating(false);
+    }, 500);
   };
 
   const convertToLatLng = (location: string): Location | null => {
@@ -120,22 +151,86 @@ export default function BookingPage() {
             <option value="premium">Premium</option>
           </select>
 
-          {fare > 0 && (
-            <motion.p
-              className="mt-4 text-lg font-semibold text-blue-400"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              Estimated Fare: ${fare}
-            </motion.p>
+          <div className="mt-4">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={isSharedRide}
+                onChange={(e) => setIsSharedRide(e.target.checked)}
+                className="form-checkbox text-blue-500"
+              />
+              <span>Share this ride</span>
+            </label>
+          </div>
+
+          {isSharedRide && (
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-300">
+                Add Participants (comma-separated emails)
+              </label>
+              <input
+                type="text"
+                value={participants.join(", ")}
+                onChange={(e) => setParticipants(e.target.value.split(",").map(email => email.trim()))}
+                className="w-full p-3 mt-1 rounded-lg bg-gray-700 text-white"
+                placeholder="email1@example.com, email2@example.com"
+              />
+            </div>
           )}
 
+          {/* Fare Calculation Section */}
+          <div className="mt-6 space-y-4">
+            <motion.button
+              onClick={handleCalculateFare}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-lg transition transform hover:scale-105 focus:outline-none"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.3 }}
+              disabled={isCalculating}
+            >
+              {isCalculating ? 'Calculating...' : 'Calculate Fare'}
+            </motion.button>
+
+            {estimatedFare !== null && (
+              <motion.div
+                className="p-4 bg-gray-700 rounded-lg"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <h4 className="text-lg font-semibold text-blue-300 mb-2">Fare Estimate</h4>
+                <div className="space-y-2">
+                  <p className="text-white">
+                    Base Fare: ${rideType === 'premium' ? (estimatedFare / 1.5).toFixed(2) : estimatedFare.toFixed(2)}
+                  </p>
+                  {rideType === 'premium' && (
+                    <p className="text-yellow-400">Premium Service: +50%</p>
+                  )}
+                  {isSharedRide && participants.length > 0 && (
+                    <p className="text-green-400">
+                      Split between {participants.length + 1} people
+                    </p>
+                  )}
+                  <div className="pt-2 border-t border-gray-600">
+                    <p className="text-xl font-bold text-blue-400">
+                      Your Share: ${estimatedFare.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </div>
+
+          {/* Update the Book Now button to be disabled if no fare is calculated */}
           <motion.button
             onClick={handleBooking}
-            className="w-full mt-6 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg transition transform hover:scale-105 focus:outline-none"
-            whileHover={{ scale: 1.05 }}
+            className={`w-full mt-6 font-bold py-3 rounded-lg transition transform hover:scale-105 focus:outline-none ${
+              estimatedFare === null 
+              ? 'bg-gray-500 cursor-not-allowed' 
+              : 'bg-green-500 hover:bg-green-600'
+            }`}
+            whileHover={{ scale: estimatedFare !== null ? 1.05 : 1 }}
             transition={{ duration: 0.3 }}
+            disabled={estimatedFare === null}
           >
             Book Now
           </motion.button>

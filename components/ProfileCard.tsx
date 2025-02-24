@@ -5,6 +5,10 @@ interface Profile {
   totalRides: number;
   phoneNumber: string;
   address: string;
+  preferences: {
+    rideSharing: boolean;
+    paymentSplitting: boolean;
+  };
 }
 
 interface ProfileCardProps {
