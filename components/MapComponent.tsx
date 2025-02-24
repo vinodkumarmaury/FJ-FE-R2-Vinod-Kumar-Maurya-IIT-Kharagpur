@@ -1,15 +1,55 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet-routing-machine";
+import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
+import "./MapComponent.css";
+
+// Custom icon creation function
+const createCustomIcon = (color: string) => {
+  return L.icon({
+    iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+    shadowUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+  });
+}
+
+declare module "leaflet" {
+  namespace Routing {
+    interface LineOptions {
+      styles?: L.PathOptions[];
+      extendToWaypoints: boolean;
+      missingRouteTolerance: number;
+      addToLayer?: boolean;
+    }
+    interface RoutingControlOptions {
+      waypoints?: L.LatLng[] | { latLng: L.LatLng }[];
+      routeWhileDragging?: boolean;
+      lineOptions?: LineOptions;
+      addWaypoints?: boolean;
+      fitSelectedRoutes?: boolean | "smart";
+      showAlternatives?: boolean;
+      alternativeStyleOptions?: LineOptions;
+      plan?: any;
+      createMarker?(i: number, waypoint: any, n: number): L.Marker;
+    }
+  }
+}
 
 interface MapComponentProps {
+  // For live tracking before booking:
   currentLocation?: {
     lat: number;
     lng: number;
   };
+  // When a booking is done, these props are provided:
   pickup?: {
     lat: number;
     lng: number;
@@ -25,44 +65,94 @@ interface RouteInfo {
   duration: string;
 }
 
-const MapComponent: React.FC<MapComponentProps> = ({ currentLocation, pickup, destination }) => {
+const MapComponent: React.FC<MapComponentProps> = ({
+  currentLocation,
+  pickup,
+  destination,
+}) => {
   const [isClient, setIsClient] = useState(false);
-  const [route, setRoute] = useState<L.LatLng[]>([]);
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
-  const [pickupInput, setPickupInput] = useState<string>("");
-  const [destinationInput, setDestinationInput] = useState<string>("");
+  const [map, setMap] = useState<L.Map | null>(null);
+  const [routingControl, setRoutingControl] = useState<any>(null);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
+  // Default center if no location is provided
+  const defaultCenter = { lat: 26.8467, lng: 80.9462 };
+  const initialCenter = pickup
+    ? [pickup.lat, pickup.lng]
+    : currentLocation
+    ? [currentLocation.lat, currentLocation.lng]
+    : [defaultCenter.lat, defaultCenter.lng];
+
+  // Recenter the map if currentLocation changes and no booking is done
   useEffect(() => {
-    if (pickup && destination) {
-      const fetchRoute = async () => {
-        try {
-          const response = await fetch(
-            `https://api.openrouteservice.org/v2/directions/driving-car?api_key=your-api-key&start=${encodeURIComponent(pickup.lng)},${encodeURIComponent(pickup.lat)}&end=${encodeURIComponent(destination.lng)},${encodeURIComponent(destination.lat)}`
-          );
-          const data = await response.json();
-          if (data && data.features && data.features.length > 0) {
-            const coordinates = data.features[0].geometry.coordinates;
-            const routeCoordinates = coordinates.map((point: any) => new L.LatLng(point[1], point[0]));
-            setRoute(routeCoordinates);
-            setRouteInfo({
-              distance: (data.features[0].properties.segments[0].distance / 1000).toFixed(2) + ' km',
-              duration: (data.features[0].properties.segments[0].duration / 60).toFixed(2) + ' mins',
-            });
-          }
-        } catch (error) {
-          console.error("Error fetching route", error);
-        }
-      };
-
-      fetchRoute();
+    if (map && currentLocation && !pickup && !destination) {
+      map.setView([currentLocation.lat, currentLocation.lng], 13);
     }
-  }, [pickup, destination]);
+  }, [currentLocation, map, pickup, destination]);
 
-  const center = currentLocation || pickup || { lat: 0, lng: 0 };
+  // Draw route when both pickup and destination are provided
+  useEffect(() => {
+    if (map && pickup && destination) {
+      if (routingControl) {
+        map.removeControl(routingControl);
+        setRoutingControl(null);
+      }
+      const routingOptions: L.Routing.RoutingControlOptions = {
+        waypoints: [
+          L.latLng(pickup.lat, pickup.lng),
+          L.latLng(destination.lat, destination.lng),
+        ],
+        routeWhileDragging: true,
+        lineOptions: {
+          styles: [
+            { color: "#4F46E5", opacity: 0.8, weight: 6 } as L.PathOptions,
+            { color: "#ffffff", opacity: 0.3, weight: 8 } as L.PathOptions,
+          ],
+          extendToWaypoints: true,
+          missingRouteTolerance: 0,
+          addToLayer: true,
+        },
+        createMarker: function (i: number, waypoint: any) {
+          const marker = L.marker(waypoint.latLng, {
+            icon: createCustomIcon(i === 0 ? "green" : "red"),
+          });
+          marker.bindPopup(i === 0 ? "Pickup Location" : "Destination").openPopup();
+          return marker;
+        },
+        addWaypoints: false,
+        fitSelectedRoutes: true,
+        showAlternatives: true,
+        alternativeStyleOptions: {
+          styles: [
+            { color: "#9333EA", opacity: 0.5, weight: 4 },
+            { color: "#2563EB", opacity: 0.4, weight: 4 },
+          ],
+          extendToWaypoints: true,
+          missingRouteTolerance: 0,
+        },
+      };
+      const control = L.Routing.control(routingOptions).addTo(map);
+      setRoutingControl(control);
+
+      control.on("routesfound", (e: any) => {
+        const fastest = e.routes[0];
+        setRouteInfo({
+          distance: (fastest.summary.totalDistance / 1000).toFixed(2) + " km",
+          duration: formatDuration(fastest.summary.totalTime),
+        });
+      });
+    }
+  }, [pickup, destination, map]);
+
+  const formatDuration = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return hours > 0 ? `${hours}h ${minutes}min` : `${minutes} min`;
+  };
 
   if (!isClient) {
     return (
@@ -73,47 +163,45 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentLocation, pickup, de
   }
 
   return (
-    <div>
-      {!pickup && !destination && (
-        <>
-          <input
-            id="pickup"
-            type="text"
-            placeholder="Enter pickup location (e.g., 51.5074,-0.1278)"
-            value={pickupInput}
-            onChange={(e) => setPickupInput(e.target.value)}
-            className="w-full p-3 mt-1 rounded-lg shadow-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring focus:ring-blue-400 transition"
-          />
-
-          <input
-            id="destination"
-            type="text"
-            placeholder="Enter destination (e.g., 51.5074,-0.1278)"
-            value={destinationInput}
-            onChange={(e) => setDestinationInput(e.target.value)}
-            className="w-full p-3 mt-1 rounded-lg shadow-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring focus:ring-blue-400 transition"
-          />
-        </>
-      )}
-
-      <MapContainer style={{ height: "400px", width: "100%" }} center={[center.lat, center.lng]} zoom={13}>
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        {currentLocation && (
-          <Marker position={[currentLocation.lat, currentLocation.lng]} />
-        )}
-        {route.length > 0 && (
-          <>
-            <Marker position={route[0]} />
-            <Marker position={route[route.length - 1]} />
-            <Polyline positions={route} pathOptions={{ color: "blue" }} />
-          </>
+    <div className="relative">
+      <MapContainer
+        center={initialCenter}
+        zoom={13}
+        style={{ height: "500px", width: "100%" }}
+        whenCreated={setMap}
+        className="rounded-lg shadow-lg z-0"
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution="&copy; OpenStreetMap contributors"
+        />
+        {(!pickup && !destination) && (
+          <Marker
+            position={
+              currentLocation
+                ? [currentLocation.lat, currentLocation.lng]
+                : [defaultCenter.lat, defaultCenter.lng]
+            }
+            icon={createCustomIcon("blue")}
+          >
+            <Popup>
+              {currentLocation
+                ? "Your Current Location"
+                : "Default Location: Lucknow"}
+            </Popup>
+          </Marker>
         )}
       </MapContainer>
-      
+
       {routeInfo && (
-        <div className="route-info mt-4 text-white">
-          <p>Distance: {routeInfo.distance}</p>
-          <p>Duration: {routeInfo.duration}</p>
+        <div className="route-info absolute bottom-4 left-4 z-[400]">
+          <h3 className="font-semibold text-lg mb-2">Route Information</h3>
+          <p>
+            <strong>Distance:</strong> {routeInfo.distance}
+          </p>
+          <p>
+            <strong>Duration:</strong> {routeInfo.duration}
+          </p>
         </div>
       )}
     </div>
