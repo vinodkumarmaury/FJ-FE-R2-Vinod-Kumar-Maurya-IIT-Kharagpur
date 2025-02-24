@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/utils/api";
 import { toast } from "react-toastify";
-import { FaUser, FaLock } from "react-icons/fa";
+
 
 export default function LoginPage() {
   const [username, setUsername] = useState(""); // Use username here
