@@ -45,7 +45,7 @@ export default function BookingPage() {
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
 
   const router = useRouter();
-  const { addRide, setCurrentRide, currentRide, isBookingComplete, setBookingComplete } = useRideStore();
+  const { addRide, setCurrentRide, currentRide, isBookingComplete, setBookingComplete, lastBookedRoute } = useRideStore();
   const { addPoints, calculateTier } = useLoyaltyStore();
   const [showCurrentLocation, setShowCurrentLocation] = useState(!isBookingComplete);
 
@@ -389,12 +389,12 @@ export default function BookingPage() {
           transition={{ duration: 0.6 }}
         >
           <h3 className="text-2xl font-semibold mb-4 text-center text-blue-300">
-            {isBookingComplete ? "Your Ride Route" : "Live Location"}
+            {lastBookedRoute ? "Your Last Booked Route" : "Live Location"}
           </h3>
           <MapComponent
-            currentLocation={showCurrentLocation ? currentLocation : undefined}
-            pickup={isBookingComplete && currentRide ? currentRide.pickupCoords : undefined}
-            destination={isBookingComplete && currentRide ? currentRide.destinationCoords : undefined}
+            currentLocation={!lastBookedRoute ? currentLocation : undefined}
+            pickup={lastBookedRoute?.pickup}
+            destination={lastBookedRoute?.destination}
           />
         </motion.div>
       </div>

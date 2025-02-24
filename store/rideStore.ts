@@ -33,9 +33,18 @@ interface Ride {
   }[];
 }
 
+interface Location {
+  lat: number;
+  lng: number;
+}
+
 interface RideState {
   rides: Ride[];
   currentRide: Ride | null;
+  lastBookedRoute: {
+    pickup: Location;
+    destination: Location;
+  } | null;
   loyaltyPoints: number;
   tier: 'Bronze' | 'Silver' | 'Gold' | 'Platinum';
   isBookingComplete: boolean;
@@ -45,6 +54,8 @@ interface RideState {
   addLoyaltyPoints: (points: number) => void;
   calculateTier: () => void;
   clearCurrentRide: () => void;
+  setLastBookedRoute: (pickup: Location, destination: Location) => void;
+  clearLastBookedRoute: () => void;
 }
 
 export const useRideStore = create(
@@ -52,6 +63,7 @@ export const useRideStore = create(
     (set, get) => ({
       rides: [],
       currentRide: null,
+      lastBookedRoute: null,
       loyaltyPoints: 0,
       tier: 'Bronze',
       isBookingComplete: false,
@@ -82,7 +94,10 @@ export const useRideStore = create(
         
         set({ tier: newTier });
       },
-      clearCurrentRide: () => set({ currentRide: null })
+      clearCurrentRide: () => set({ currentRide: null }),
+      setLastBookedRoute: (pickup, destination) => 
+        set({ lastBookedRoute: { pickup, destination } }),
+      clearLastBookedRoute: () => set({ lastBookedRoute: null })
     }),
     {
       name: 'ride-storage',

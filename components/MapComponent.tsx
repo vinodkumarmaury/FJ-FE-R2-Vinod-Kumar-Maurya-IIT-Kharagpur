@@ -7,7 +7,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 import "./MapComponent.css";
-import { Location } from '@/types';
+import { Location } from "@/types"; // Ensure this type exists or replace with your own
 
 // Custom icon creation function
 const createCustomIcon = (color: string) => {
@@ -23,7 +23,9 @@ const createCustomIcon = (color: string) => {
 };
 
 interface MapComponentProps {
+  // For live tracking before booking:
   currentLocation?: Location;
+  // When a booking is done, these props are provided:
   pickup?: Location;
   destination?: Location;
 }
@@ -48,7 +50,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
     setIsClient(true);
   }, []);
 
-  // Once the MapContainer mounts, set the map instance from the ref
+  // Set the map instance from the ref
   useEffect(() => {
     if (mapRef.current && !map) {
       setMap(mapRef.current);
@@ -73,63 +75,58 @@ const MapComponent: React.FC<MapComponentProps> = ({
   // Draw route when both pickup and destination are provided
   useEffect(() => {
     if (map && pickup && destination) {
-      // Clear existing routing control
+      // Remove existing routing control if present
       if (routingControl) {
         map.removeControl(routingControl);
         setRoutingControl(null);
       }
-
-      const routingOptions = {
+      // Extend the type so alternativeStyleOptions is accepted
+      const routingOptions: L.Routing.RoutingControlOptions & {
+        createMarker?: (i: number, waypoint: any) => L.Marker;
+        alternativeStyleOptions?: any;
+      } = {
         waypoints: [
-          L.latLng(pickup?.lat || 0, pickup?.lng || 0),
-          L.latLng(destination?.lat || 0, destination?.lng || 0)
+          L.latLng(pickup.lat, pickup.lng),
+          L.latLng(destination.lat, destination.lng),
         ],
         routeWhileDragging: false,
         lineOptions: {
           styles: [
-            { color: '#4F46E5', opacity: 0.8, weight: 6 },
-            { color: '#ffffff', opacity: 0.3, weight: 8 }
+            { color: "#4F46E5", opacity: 0.8, weight: 6 },
+            { color: "#ffffff", opacity: 0.3, weight: 8 },
           ],
           extendToWaypoints: true,
-          missingRouteTolerance: 0
-        }
-      };
-
-      const control = L.Routing.control({
-        ...routingOptions,
-        createMarker: function(i: number, waypoint: any) {
+          missingRouteTolerance: 0,
+        },
+        createMarker: function (i: number, waypoint: any) {
           return L.marker(waypoint.latLng, {
-            icon: createCustomIcon(i === 0 ? 'green' : 'red')
-          }).bindPopup(i === 0 ? 'Pickup Location' : 'Destination');
-        }
-      }).addTo(map);
-
-      // Fit the map to show both markers
-      const bounds = L.latLngBounds([
-        [pickup.lat, pickup.lng],
-        [destination.lat, destination.lng]
-      ]);
-      map.fitBounds(bounds, { padding: [50, 50] });
-
+            icon: createCustomIcon(i === 0 ? "green" : "red"),
+          }).bindPopup(i === 0 ? "Pickup Location" : "Destination");
+        },
+        addWaypoints: false,
+        fitSelectedRoutes: true,
+        showAlternatives: true,
+        alternativeStyleOptions: {
+          styles: [
+            { color: "#9333EA", opacity: 0.5, weight: 4 },
+            { color: "#2563EB", opacity: 0.4, weight: 4 },
+          ],
+          extendToWaypoints: true,
+          missingRouteTolerance: 0,
+        },
+      };
+      const control = L.Routing.control(routingOptions).addTo(map);
       setRoutingControl(control);
-    }
-  }, [map, pickup, destination]);
 
-  useEffect(() => {
-    if (map) {
-      if (pickup && destination) {
-        // Show route
-        const bounds = L.latLngBounds([
-          [pickup.lat, pickup.lng],
-          [destination.lat, destination.lng]
-        ]);
-        map.fitBounds(bounds, { padding: [50, 50] });
-      } else if (currentLocation) {
-        // Show current location
-        map.setView([currentLocation.lat, currentLocation.lng], 13);
-      }
+      control.on("routesfound", (e: any) => {
+        const fastest = e.routes[0];
+        setRouteInfo({
+          distance: (fastest.summary.totalDistance / 1000).toFixed(2) + " km",
+          duration: formatDuration(fastest.summary.totalTime),
+        });
+      });
     }
-  }, [map, currentLocation, pickup, destination]);
+  }, [pickup, destination, map]);
 
   const formatDuration = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
