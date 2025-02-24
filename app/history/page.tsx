@@ -5,12 +5,24 @@ import { getRideHistory } from "../../utils/api";
 import RideCard from "../../components/RideCard";
 import { motion } from "framer-motion";
 
-// Define the expected Ride type
+// Update the Ride interface to match RideDetails
 interface Ride {
   id: string;
   date: string;
+  pickup: string;
+  destination: string;
   distance: number;
   fare: number;
+  driver: {
+    name: string;
+    rating: number;
+    photo: string;
+  };
+  isShared: boolean;
+  participants?: {
+    name: string;
+    contribution: number;
+  }[];
 }
 
 interface RideHistoryResponse {

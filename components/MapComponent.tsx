@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -19,29 +19,7 @@ const createCustomIcon = (color: string) => {
     popupAnchor: [1, -34],
     shadowSize: [41, 41],
   });
-}
-
-declare module "leaflet" {
-  namespace Routing {
-    interface LineOptions {
-      styles?: L.PathOptions[];
-      extendToWaypoints: boolean;
-      missingRouteTolerance: number;
-      addToLayer?: boolean;
-    }
-    interface RoutingControlOptions {
-      waypoints?: L.LatLng[] | { latLng: L.LatLng }[];
-      routeWhileDragging?: boolean;
-      lineOptions?: LineOptions;
-      addWaypoints?: boolean;
-      fitSelectedRoutes?: boolean | "smart";
-      showAlternatives?: boolean;
-      alternativeStyleOptions?: LineOptions;
-      plan?: any;
-      createMarker?(i: number, waypoint: any, n: number): L.Marker;
-    }
-  }
-}
+};
 
 interface MapComponentProps {
   // For live tracking before booking:
@@ -74,18 +52,26 @@ const MapComponent: React.FC<MapComponentProps> = ({
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [map, setMap] = useState<L.Map | null>(null);
   const [routingControl, setRoutingControl] = useState<any>(null);
+  const mapRef = useRef<L.Map>(null);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Default center if no location is provided
-  const defaultCenter = { lat: 26.8467, lng: 80.9462 };
-  const initialCenter = pickup
+  // Once the MapContainer mounts, set the map instance from the ref
+  useEffect(() => {
+    if (mapRef.current && !map) {
+      setMap(mapRef.current);
+    }
+  }, [mapRef, map]);
+
+  // Default center (Lucknow) if no location is provided
+  const defaultCenter: L.LatLngTuple = [26.8467, 80.9462];
+  const initialCenter: L.LatLngTuple = pickup
     ? [pickup.lat, pickup.lng]
     : currentLocation
     ? [currentLocation.lat, currentLocation.lng]
-    : [defaultCenter.lat, defaultCenter.lng];
+    : defaultCenter;
 
   // Recenter the map if currentLocation changes and no booking is done
   useEffect(() => {
@@ -101,16 +87,16 @@ const MapComponent: React.FC<MapComponentProps> = ({
         map.removeControl(routingControl);
         setRoutingControl(null);
       }
-      const routingOptions: L.Routing.RoutingControlOptions = {
+      const routingOptions = {
         waypoints: [
           L.latLng(pickup.lat, pickup.lng),
-          L.latLng(destination.lat, destination.lng),
+          L.latLng(destination.lat, destination.lng)
         ],
         routeWhileDragging: true,
         lineOptions: {
           styles: [
-            { color: "#4F46E5", opacity: 0.8, weight: 6 } as L.PathOptions,
-            { color: "#ffffff", opacity: 0.3, weight: 8 } as L.PathOptions,
+            { color: "#4F46E5", opacity: 0.8, weight: 6 },
+            { color: "#ffffff", opacity: 0.3, weight: 8 }
           ],
           extendToWaypoints: true,
           missingRouteTolerance: 0,
@@ -118,7 +104,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
         },
         createMarker: function (i: number, waypoint: any) {
           const marker = L.marker(waypoint.latLng, {
-            icon: createCustomIcon(i === 0 ? "green" : "red"),
+            icon: createCustomIcon(i === 0 ? "green" : "red")
           });
           marker.bindPopup(i === 0 ? "Pickup Location" : "Destination").openPopup();
           return marker;
@@ -129,11 +115,11 @@ const MapComponent: React.FC<MapComponentProps> = ({
         alternativeStyleOptions: {
           styles: [
             { color: "#9333EA", opacity: 0.5, weight: 4 },
-            { color: "#2563EB", opacity: 0.4, weight: 4 },
+            { color: "#2563EB", opacity: 0.4, weight: 4 }
           ],
           extendToWaypoints: true,
           missingRouteTolerance: 0,
-        },
+        }
       };
       const control = L.Routing.control(routingOptions).addTo(map);
       setRoutingControl(control);
@@ -142,7 +128,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
         const fastest = e.routes[0];
         setRouteInfo({
           distance: (fastest.summary.totalDistance / 1000).toFixed(2) + " km",
-          duration: formatDuration(fastest.summary.totalTime),
+          duration: formatDuration(fastest.summary.totalTime)
         });
       });
     }
@@ -168,7 +154,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
         center={initialCenter}
         zoom={13}
         style={{ height: "500px", width: "100%" }}
-        whenCreated={setMap}
+        ref={mapRef}
         className="rounded-lg shadow-lg z-0"
       >
         <TileLayer
@@ -180,7 +166,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
             position={
               currentLocation
                 ? [currentLocation.lat, currentLocation.lng]
-                : [defaultCenter.lat, defaultCenter.lng]
+                : defaultCenter
             }
             icon={createCustomIcon("blue")}
           >

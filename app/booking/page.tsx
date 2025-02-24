@@ -218,7 +218,9 @@ export default function BookingPage() {
                 type="text"
                 value={participants.join(", ")}
                 onChange={(e) =>
-                  setParticipants(e.target.value.split(",").map((email) => email.trim()))
+                  setParticipants(
+                    e.target.value.split(",").map((email) => email.trim())
+                  )
                 }
                 className="w-full p-3 mt-1 rounded-lg bg-gray-700 text-white"
                 placeholder="email1@example.com, email2@example.com"

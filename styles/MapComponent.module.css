@@ -1,0 +1,25 @@
+.mapContainer {
+  height: 500px;
+  width: 100%;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.routeInfo {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  background-color: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 400;
+}
+
+.leafletContainer :global(.leaflet-routing-container) {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 300px;
+}

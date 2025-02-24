@@ -37,6 +37,25 @@ interface RideDetails {
   }[];
 }
 
+interface Ride {
+  id: string;
+  date: string;
+  pickup: string;
+  destination: string;
+  distance: number;
+  fare: number;
+  driver: {
+    name: string;
+    rating: number;
+    photo: string;
+  };
+  isShared: boolean;
+  participants?: {
+    name: string;
+    contribution: number;
+  }[];
+}
+
 // Login: Use your Next.js API route as a proxy.
 export const login = async (username: string, password: string) => {
   const response = await fetch("/api/auth/login", {
@@ -168,8 +187,8 @@ export const initiateRideSharing = async (rideShare: RideShare) => {
   });
 };
 
-export const getRideHistory = async (): Promise<{ data: { rides: RideDetails[] } }> => {
-  // Enhanced mock data with driver details and sharing information
+export const getRideHistory = async (): Promise<{ data: { rides: Ride[] } }> => {
+  // Simulate API call with mock data
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
@@ -177,38 +196,46 @@ export const getRideHistory = async (): Promise<{ data: { rides: RideDetails[] }
           rides: [
             {
               id: "1",
-              pickup: "Location A",
-              destination: "Location B",
-              date: "2025-02-20",
-              fare: 25,
+              date: "2024-02-24",
+              pickup: "Mall Avenue, Lucknow",
+              destination: "Hazratganj, Lucknow",
+              distance: 5.2,
+              fare: 250,
               driver: {
-                name: "John Smith",
+                name: "Rahul Kumar",
                 rating: 4.8,
-                photo: "driver1.jpg"
+                photo: "https://randomuser.me/api/portraits/men/1.jpg"
               },
-              isShared: true,
-              participants: [
-                { name: "User 1", contribution: 12.5 },
-                { name: "User 2", contribution: 12.5 }
-              ]
+              isShared: false
             },
             {
               id: "2",
-              pickup: "Location C",
-              destination: "Location D",
-              date: "2025-02-18",
-              fare: 30,
+              date: "2024-02-23",
+              pickup: "Gomti Nagar, Lucknow",
+              destination: "Charbagh Railway Station",
+              distance: 8.5,
+              fare: 350,
               driver: {
-                name: "Jane Doe",
+                name: "Priya Singh",
                 rating: 4.9,
-                photo: "driver2.jpg"
+                photo: "https://randomuser.me/api/portraits/women/2.jpg"
               },
-              isShared: false
+              isShared: true,
+              participants: [
+                {
+                  name: "User 1",
+                  contribution: 175
+                },
+                {
+                  name: "User 2",
+                  contribution: 175
+                }
+              ]
             }
           ]
         }
       });
-    }, 500);
+    }, 1000);
   });
 };
 
