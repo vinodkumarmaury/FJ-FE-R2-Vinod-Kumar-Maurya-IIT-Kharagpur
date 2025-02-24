@@ -24,10 +24,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className={inter.className}>
         <Navbar setDarkMode={setDarkMode} darkMode={darkMode} />
-        <ToastContainer />
         <main className="pt-16">
           {children}
         </main>
+        <ToastContainer position="bottom-right" />
       </body>
     </html>
   );

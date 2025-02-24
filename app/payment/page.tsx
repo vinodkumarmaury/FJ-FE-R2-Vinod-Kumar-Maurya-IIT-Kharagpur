@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import { motion } from "framer-motion";
+import 'react-toastify/dist/ReactToastify.css';
 
-// Initialize Stripe with your publishable key (safe for client use)
+// Initialize Stripe with your publishable key
 const stripePromise = loadStripe("pk_test_51QvQPWC5MEnMdgz5uwIGEYJX8LtsPTzZeV3UWeV6zi8rdzTkDqC5xpYTxJgd3qDRacKEMmaHhbDayxL9472zA7ev00zIflggUx");
 
 const CheckoutForm = () => {
@@ -136,6 +137,7 @@ export default function PaymentPage() {
           <CheckoutForm />
         </Elements>
       </motion.div>
+      <ToastContainer />
     </div>
   );
 }
