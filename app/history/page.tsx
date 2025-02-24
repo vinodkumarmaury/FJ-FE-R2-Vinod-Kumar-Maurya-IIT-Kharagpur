@@ -1,73 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getRideHistory } from "../../utils/api";
-import RideCard from "../../components/RideCard";
-import { motion } from "framer-motion";
+import { useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { useRideStore } from '@/store/rideStore';
+import dynamic from 'next/dynamic';
 
-// Update the Ride interface to match RideDetails
-interface Ride {
-  id: string;
-  date: string;
-  pickup: string;
-  destination: string;
-  distance: number;
-  fare: number;
-  driver: {
-    name: string;
-    rating: number;
-    photo: string;
-  };
-  isShared: boolean;
-  participants?: {
-    name: string;
-    contribution: number;
-  }[];
-}
+const MapComponent = dynamic(() => import("../../components/MapComponent"), { 
+  ssr: false 
+});
 
-interface RideHistoryResponse {
-  data: {
-    rides: Ride[];
-  };
-}
-
-export default function RideHistory() {
-  const [rides, setRides] = useState<Ride[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    async function fetchHistory() {
-      try {
-        const response: unknown = await getRideHistory();
-
-        // Type guard function to check if response matches expected structure
-        const isValidResponse = (res: any): res is RideHistoryResponse => {
-          return (
-            res &&
-            typeof res === "object" &&
-            "data" in res &&
-            res.data &&
-            typeof res.data === "object" &&
-            "rides" in res.data &&
-            Array.isArray(res.data.rides)
-          );
-        };
-
-        if (isValidResponse(response)) {
-          setRides(response.data.rides);
-        } else {
-          setRides([]);
-        }
-      } catch (error) {
-        console.error("Error fetching ride history", error);
-        setRides([]); // Ensure a default value is set
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchHistory();
-  }, []);
+export default function RideHistoryPage() {
+  const { rides } = useRideStore();
 
   return (
     <motion.div
@@ -85,47 +28,95 @@ export default function RideHistory() {
         Ride History 🚖
       </motion.h2>
 
-      {loading ? (
-        <motion.p
-          className="text-center text-lg text-gray-600 dark:text-gray-300"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          Loading your ride history...
-        </motion.p>
-      ) : rides.length > 0 ? (
-        <motion.div
-          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          {rides.map((ride, index) => (
+      {rides.length === 0 ? (
+        <div className="text-center text-gray-600 dark:text-gray-400">
+          No rides yet. Book your first ride!
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {rides.map((ride) => (
             <motion.div
-              key={index}
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.3 }}
+              key={ride.id}
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
             >
-              <RideCard ride={ride} />
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {new Date(ride.date).toLocaleDateString()}
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {ride.rideType} Ride
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                      ₹{ride.fare.toFixed(2)}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {ride.distance} km • {ride.duration}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Map showing the route */}
+                <div className="h-[200px] mb-4 rounded-lg overflow-hidden">
+                  <MapComponent
+                    pickup={ride.pickupCoords}
+                    destination={ride.destinationCoords}
+                  />
+                </div>
+
+                <div className="flex items-center space-x-4 mb-4">
+                  <img
+                    src={ride.driver.photo}
+                    alt={ride.driver.name}
+                    className="w-12 h-12 rounded-full"
+                  />
+                  <div>
+                    <p className="font-medium dark:text-white">
+                      {ride.driver.name}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {ride.driver.vehicleModel} • {ride.driver.vehicleNumber}
+                    </p>
+                  </div>
+                  <div className="ml-auto flex items-center">
+                    <span className="text-yellow-400">★</span>
+                    <span className="ml-1 text-gray-600 dark:text-gray-400">
+                      {ride.driver.rating}
+                    </span>
+                  </div>
+                </div>
+
+                {ride.isShared && ride.participants && (
+                  <div className="border-t dark:border-gray-700 pt-4 mt-4">
+                    <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                      Shared with:
+                    </h4>
+                    <div className="space-y-2">
+                      {ride.participants.map((participant, index) => (
+                        <div
+                          key={index}
+                          className="flex justify-between text-sm"
+                        >
+                          <span className="text-gray-600 dark:text-gray-400">
+                            {participant.name}
+                          </span>
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            ₹{participant.contribution.toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </motion.div>
           ))}
-        </motion.div>
-      ) : (
-        <motion.div
-          className="flex flex-col items-center justify-center text-center text-gray-600 dark:text-gray-300 text-lg mt-10"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/3081/3081648.png"
-            alt="No rides available"
-            className="w-40 h-40 opacity-75"
-          />
-          <p className="mt-4 text-xl font-semibold">No past rides available.</p>
-          <p className="text-gray-500 text-sm">Your ride history will appear here.</p>
-        </motion.div>
+        </div>
       )}
     </motion.div>
   );

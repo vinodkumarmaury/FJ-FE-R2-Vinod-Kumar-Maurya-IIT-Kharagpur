@@ -5,6 +5,7 @@ import Link from "next/link";
 import DarkModeToggle from "./DarkModeToggle";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
+import { useLoyaltyStore } from '@/store/loyaltyStore';
 
 interface NavbarProps {
   darkMode: boolean;
@@ -35,6 +36,8 @@ export default function Navbar({ darkMode, setDarkMode }: NavbarProps) {
     { name: "Tracking", path: "/tracking" },
     { name: "Loyalty", path: "/loyalty" },
   ];
+
+  const { points, tier } = useLoyaltyStore();
 
   return (
     <motion.nav
@@ -67,6 +70,11 @@ export default function Navbar({ darkMode, setDarkMode }: NavbarProps) {
           ))}
         </div>
         <div className="hidden md:flex items-center space-x-4">
+          <div className="px-3 py-1 rounded-full bg-yellow-400/10 border border-yellow-400/20">
+            <span className="text-sm font-medium text-yellow-400">
+              {tier} • {points} pts
+            </span>
+          </div>
           <Link href="/auth/login">
             <motion.span
               className="px-4 py-2 rounded-lg text-sm font-medium text-black bg-yellow-400 hover:bg-yellow-500 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
@@ -109,6 +117,11 @@ export default function Navbar({ darkMode, setDarkMode }: NavbarProps) {
                 </motion.span>
               </Link>
             ))}
+            <div className="px-3 py-1 rounded-full bg-yellow-400/10 border border-yellow-400/20 mb-4">
+              <span className="text-sm font-medium text-yellow-400">
+                {tier} • {points} pts
+              </span>
+            </div>
             <div className="flex flex-col items-center space-y-2">
               <Link href="/auth/login" onClick={() => setMenuOpen(false)}>
                 <motion.span

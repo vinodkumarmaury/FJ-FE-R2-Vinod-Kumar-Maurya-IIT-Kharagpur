@@ -4,6 +4,15 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import FeedbackForm from "../../components/FeedbackForm";
+import { useRouter } from 'next/navigation';
+import { useRideStore } from '@/store/rideStore';
+import { useLoyaltyStore } from '@/store/loyaltyStore';
+import { Location, Ride } from '@/types';
+
+interface RouteInfo {
+  distance: string;
+  duration: string;
+}
 
 // Dynamically import MapComponent (client side only)
 const MapComponent = dynamic(() => import("../../components/MapComponent"), {
@@ -14,11 +23,6 @@ const MapComponent = dynamic(() => import("../../components/MapComponent"), {
     </div>
   )
 });
-
-interface Location {
-  lat: number;
-  lng: number;
-}
 
 export default function BookingPage() {
   const [pickup, setPickup] = useState("");
@@ -32,11 +36,18 @@ export default function BookingPage() {
   const [participants, setParticipants] = useState<string[]>([]);
   const [estimatedFare, setEstimatedFare] = useState<number | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [bookingComplete, setBookingComplete] = useState(false);
+  const [confirmedPickup, setConfirmedPickup] = useState<Location | null>(null);
+  const [confirmedDestination, setConfirmedDestination] = useState<Location | null>(null);
   const [currentLocation, setCurrentLocation] = useState<Location>({
     lat: 26.8467,
     lng: 80.9462,
   }); // Default to Lucknow
+  const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
+
+  const router = useRouter();
+  const { addRide, setCurrentRide, currentRide, isBookingComplete, setBookingComplete } = useRideStore();
+  const { addPoints, calculateTier } = useLoyaltyStore();
+  const [showCurrentLocation, setShowCurrentLocation] = useState(!isBookingComplete);
 
   // Live tracking: update currentLocation using browser geolocation
   useEffect(() => {
@@ -62,39 +73,118 @@ export default function BookingPage() {
     return Math.floor(Math.random() * 50) + 10;
   };
 
-  const handleBooking = () => {
-    if (estimatedFare === null) {
-      toast.error("Please calculate the fare first");
+  const handleBooking = async () => {
+    if (!pickup || !destination || !routeInfo || !pickupLocation || !destinationLocation || !estimatedFare) {
+      toast.error("Please calculate fare first");
       return;
     }
-    setFare(estimatedFare);
-    alert(
-      `Ride booked from ${pickup} to ${destination}.\n${
-        isSharedRide ? "Shared ride - " : ""
-      }Total fare: $${estimatedFare.toFixed(2)}`
-    );
-    setBookingComplete(true);
-    setShowFeedback(true);
+  
+    try {
+      // Set confirmed locations for the map
+      if (pickupLocation && destinationLocation) {
+        setConfirmedPickup(pickupLocation);
+        setConfirmedDestination(destinationLocation);
+        setBookingComplete(true);
+  
+        const newRide: Ride = {
+          id: Math.random().toString(36).substr(2, 9),
+          date: new Date().toISOString(),
+          pickup,
+          destination,
+          pickupCoords: pickupLocation,
+          destinationCoords: destinationLocation,
+          distance: routeInfo.distance,
+          duration: routeInfo.duration,
+          fare: estimatedFare,
+          status: 'pending',
+          rideType: rideType as 'economy' | 'premium',
+          driver: {
+            name: "John Doe",
+            rating: 4.8,
+            photo: "https://randomuser.me/api/portraits/men/1.jpg",
+            vehicleNumber: "UP32 XX 1234",
+            vehicleModel: "Toyota Camry"
+          },
+          isShared: isSharedRide,
+          participants: isSharedRide ? participants.map(email => ({
+            name: email,
+            contribution: estimatedFare / (participants.length + 1)
+          })) : undefined
+        };
+  
+        // Add to store
+        addRide(newRide);
+        setCurrentRide(newRide);
+  
+        // Add loyalty points
+        const pointsEarned = Math.floor(estimatedFare * 0.1);
+        addPoints(pointsEarned);
+        calculateTier();
+  
+        // Show success message
+        toast.success(`Booking confirmed! Earned ${pointsEarned} loyalty points!`);
+  
+        // Wait a moment to show the route before redirecting
+        await new Promise(resolve => setTimeout(resolve, 2000));
+  
+        // Redirect to payment page
+        router.push('/payment');
+      }
+    } catch (error) {
+      console.error('Booking error:', error);
+      toast.error('Failed to process booking. Please try again.');
+    }
   };
 
-  const handleCalculateFare = () => {
-    if (!pickup || !destination) {
-      toast.error("Please enter both pickup and destination locations");
+  const handleCalculateFare = async () => {
+    if (!pickup || !destination || !pickupLocation || !destinationLocation) {
+      toast.error("Please enter valid pickup and destination locations");
       return;
     }
+  
     setIsCalculating(true);
-    // Simulate API call delay
-    setTimeout(() => {
-      const baseFare = calculateFare(pickup, destination);
+  
+    try {
+      // Calculate distance between coordinates using Haversine formula
+      const R = 6371; // Earth's radius in km
+      const lat1 = pickupLocation.lat * Math.PI / 180;
+      const lat2 = destinationLocation.lat * Math.PI / 180;
+      const dLat = (destinationLocation.lat - pickupLocation.lat) * Math.PI / 180;
+      const dLon = (destinationLocation.lng - pickupLocation.lng) * Math.PI / 180;
+  
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1) * Math.cos(lat2) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const distance = R * c;
+  
+      // Calculate duration (assuming average speed of 40 km/h)
+      const duration = (distance / 40) * 60; // duration in minutes
+  
+      // Set route info
+      setRouteInfo({
+        distance: `${distance.toFixed(2)}`,
+        duration: `${Math.round(duration)} mins`
+      });
+  
+      // Calculate fare
+      const baseFare = 50 + (distance * 15); // Base fare + per km charge
       const typeFactor = rideType === "premium" ? 1.5 : 1;
       const calculatedFare = baseFare * typeFactor;
+  
       if (isSharedRide && participants.length > 0) {
         setEstimatedFare(calculatedFare / (participants.length + 1));
       } else {
         setEstimatedFare(calculatedFare);
       }
+  
+    } catch (error) {
+      console.error('Fare calculation error:', error);
+      toast.error('Failed to calculate fare. Please try again.');
+    } finally {
       setIsCalculating(false);
-    }, 500);
+    }
   };
 
   // Geocoding function using Nominatim API
@@ -135,6 +225,11 @@ export default function BookingPage() {
       })();
     }
   }, [destination]);
+
+  useEffect(() => {
+    // Reset booking status when leaving the page
+    return () => setBookingComplete(false);
+  }, [setBookingComplete]);
 
   return (
     <motion.div
@@ -294,15 +389,13 @@ export default function BookingPage() {
           transition={{ duration: 0.6 }}
         >
           <h3 className="text-2xl font-semibold mb-4 text-center text-blue-300">
-            {bookingComplete ? "Ride Route" : "Live Location"}
+            {isBookingComplete ? "Your Ride Route" : "Live Location"}
           </h3>
-          {bookingComplete ? (
-            (pickupLocation && destinationLocation) && (
-              <MapComponent pickup={pickupLocation} destination={destinationLocation} />
-            )
-          ) : (
-            <MapComponent currentLocation={currentLocation} />
-          )}
+          <MapComponent
+            currentLocation={showCurrentLocation ? currentLocation : undefined}
+            pickup={isBookingComplete && currentRide ? currentRide.pickupCoords : undefined}
+            destination={isBookingComplete && currentRide ? currentRide.destinationCoords : undefined}
+          />
         </motion.div>
       </div>
 
